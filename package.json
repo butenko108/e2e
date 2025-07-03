@@ -1,0 +1,7 @@
+{
+	"type": "module",
+	"dependencies": {
+		"puppeteer": "^24.11.2",
+		"rrweb": "^2.0.0-alpha.4"
+	}
+}
