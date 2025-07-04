@@ -16,6 +16,47 @@ import puppeteer from "puppeteer";
       const url = page.url();
       console.log(`New page opened: ${url || 'about:blank'}`);
 
+      // ✅ Mirror browser console logs to Node.js terminal
+      page.on('console', msg => {
+        const type = msg.type().toUpperCase();
+        const args = msg.args();
+
+        Promise.all(args.map(arg => arg.jsonValue()))
+          .then(values => {
+            console.log(`[BROWSER ${type}]:`, ...values);
+          })
+          .catch(err => {
+            console.error('[BROWSER LOG PARSE ERROR]:', err);
+          });
+      });
+
+      // ✅ Слушаем сетевые запросы
+      page.on('request', async (request) => {
+        const postData = request.postData();
+        console.log(`➡️ REQUEST: ${request.method()} ${request.url()}`);
+        console.log('Headers:', request.headers());
+        if (postData) {
+          console.log('Request Body:', postData);
+        }
+      });
+
+      // ✅ Слушаем ответы на запросы
+      page.on('response', async (response) => {
+        const req = response.request();
+        console.log(`⬅️ RESPONSE: ${response.status()} ${req.method()} ${response.url()}`);
+        console.log('Headers:', response.headers());
+
+        try {
+          const contentType = response.headers()['content-type'] || '';
+          if (contentType.includes('application/json') || contentType.includes('text')) {
+            const body = await response.text();
+            console.log('Response Body:', body.slice(0, 100)); // Просто, чтобы логи в терминале не были такие большие
+          }
+        } catch (err) {
+          console.error('Error reading response body:', err);
+        }
+      });
+
       // ✅ Listen for when the page fully loads
       page.on('load', () => {
         console.log(`Page loaded: ${page.url()}`);
