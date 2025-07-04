@@ -1,21 +1,57 @@
 import puppeteer from "puppeteer";
 
 (async () => {
-	// Launch the browser and open a new blank page
-	const browser = await puppeteer.launch({ headless: false, slowMo: 500 });
-	const page = await browser.newPage();
+  const browser = await puppeteer.launch({
+    headless: false, // Required to allow user interaction
+    defaultViewport: null,
+    args: ['--start-maximized'],
+  });
 
-	// Navigate the page to a URL
-	await page.goto("http://127.0.0.1:5500/");
+  console.log('Browser started.');
 
-	await page.evaluate(() => {
-		const pEl = document.createElement("p");
-		pEl.textContent = "Text content";
+  // Listen for new targets (tabs, windows, etc.)
+  browser.on('targetcreated', async (target) => {
+    if (target.type() === 'page') {
+      const page = await target.page();
+      const url = page.url();
+      console.log(`New page opened: ${url || 'about:blank'}`);
 
-		const hEl = document.querySelector(".heading");
+      // ✅ Listen for when the page fully loads
+      page.on('load', () => {
+        console.log(`Page loaded: ${page.url()}`);
+      });
 
-		hEl?.parentNode?.insertBefore(pEl, hEl);
-	});
+      // Wait until DOM is available
+      await page.waitForNavigation({ waitUntil: 'domcontentloaded' }).catch(() => {});
 
-	await browser.close();
+      // Inject rrweb script
+      await page.addScriptTag({
+        url: 'https://cdn.jsdelivr.net/npm/rrweb@latest/dist/rrweb.min.js',
+      });
+
+      // Start recording and send events to console or your server
+      await page.evaluate(() => {
+        rrweb.record({
+          emit(event) {
+            console.log('rrweb event:', event);
+          },
+        });
+      });
+
+      console.log('rrweb recording started');
+
+      // ✅ Inject <h1>Test text</h1> at the top of <body>
+      await page.evaluate(() => {
+        const header = document.createElement('h1');
+        header.textContent = 'Test text';
+        header.style.color = 'red'; // Optional styling
+        header.style.fontSize = '2rem';
+        document.body.insertBefore(header, document.body.firstChild);
+      });
+
+      console.log('<h1>Test text</h1> injected');
+    }
+  });
+
+  // Keep browser open
 })();
