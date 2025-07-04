@@ -50,7 +50,7 @@ import puppeteer from "puppeteer";
           const contentType = response.headers()['content-type'] || '';
           if (contentType.includes('application/json') || contentType.includes('text')) {
             const body = await response.text();
-            console.log('Response Body:', body.slice(0, 100)); // Просто, чтобы логи в терминале не были такие большие
+            console.log('Response Body:', body); // body.slice(0, 50) Чтобы логи в терминале не были такие большие
           }
         } catch (err) {
           console.error('Error reading response body:', err);
@@ -63,34 +63,34 @@ import puppeteer from "puppeteer";
       });
 
       // Wait until DOM is available
-      await page.waitForNavigation({ waitUntil: 'domcontentloaded' }).catch(() => {});
+      // await page.waitForNavigation({ waitUntil: 'domcontentloaded' }).catch(() => {});
 
       // Inject rrweb script
-      await page.addScriptTag({
-        url: 'https://cdn.jsdelivr.net/npm/rrweb@latest/dist/rrweb.min.js',
-      });
+      // await page.addScriptTag({
+      //   url: 'https://cdn.jsdelivr.net/npm/rrweb@latest/dist/rrweb.min.js',
+      // });
 
       // Start recording and send events to console or your server
-      await page.evaluate(() => {
-        rrweb.record({
-          emit(event) {
-            console.log('rrweb event:', event);
-          },
-        });
-      });
+      // await page.evaluate(() => {
+      //   rrweb.record({
+      //     emit(event) {
+      //       console.log('rrweb event:', event);
+      //     },
+      //   });
+      // });
 
-      console.log('rrweb recording started');
+      // console.log('rrweb recording started');
 
       // ✅ Inject <h1>Test text</h1> at the top of <body>
-      await page.evaluate(() => {
-        const header = document.createElement('h1');
-        header.textContent = 'Test text';
-        header.style.color = 'red'; // Optional styling
-        header.style.fontSize = '2rem';
-        document.body.insertBefore(header, document.body.firstChild);
-      });
+      // await page.evaluate(() => {
+      //   const header = document.createElement('h1');
+      //   header.textContent = 'Test text';
+      //   header.style.color = 'red'; // Optional styling
+      //   header.style.fontSize = '2rem';
+      //   document.body.insertBefore(header, document.body.firstChild);
+      // });
 
-      console.log('<h1>Test text</h1> injected');
+      // console.log('<h1>Test text</h1> injected');
     }
   });
 
